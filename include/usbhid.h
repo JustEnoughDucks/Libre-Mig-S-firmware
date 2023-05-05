@@ -17,7 +17,7 @@
 extern usbd_device *usbd_dev;
 
 // Function  prototypes
- enum usbd_request_return_codes
+enum usbd_request_return_codes
 hid_control_request (usbd_device *dev, struct usb_setup_data *req,
                      uint8_t **buf, uint16_t *len,
                      void (**complete) (usbd_device *dev,

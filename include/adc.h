@@ -10,9 +10,11 @@
 //#include "main.h"
 
 #define AXIS_MAX 6
+#define PCB_REV 2
 
 
 void adc_setup(void);
-void axisScan(int16_t (*a) [AXIS_MAX]);
+void axis_scan(int16_t (*a) [AXIS_MAX], uint8_t startup);
+//extern uint16_t offset_table[6];
 
 #endif
