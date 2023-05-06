@@ -58,7 +58,7 @@ int8_t i2c_transfer7_bit(uint32_t i2c, uint8_t addr, uint8_t *w, size_t wn, uint
             i2c_enable_autoend(i2c);
         }
         i2c_send_start(i2c);
-        //uint32_t startMillis = _millis;
+        uint32_t startMillis = _millis;
 
         while (wn--) {
             bool wait = true;
@@ -67,9 +67,9 @@ int8_t i2c_transfer7_bit(uint32_t i2c, uint8_t addr, uint8_t *w, size_t wn, uint
                     wait = false;
                 }
                 while (i2c_nack(i2c)) {
-                    /*if((_millis - startMillis) > delay){
+                    if((_millis - startMillis) > delay){
                         return ETIMEDOUT;
-                    }*/
+                    }
                 }
                 
             }

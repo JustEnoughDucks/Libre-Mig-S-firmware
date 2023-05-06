@@ -44,7 +44,6 @@ int main(void) {
         __asm__("nop");
     }
     usb_setup();
-    //systick_setup();
 
 
     // Main Loop
@@ -57,7 +56,7 @@ int main(void) {
         } else if (err == ETIMEDOUT) {
             err = i2cSetup(); 
             if(err != I2C_OK) {
-                //usart_print_int(USART1, err);
+                usart_print_int(USART1, err);
             }
         }
         if (startup == 0){
@@ -138,17 +137,6 @@ static void clock_setup(void) {
     
 }
 
-static void systick_setup(void) {
-    //Systick enabling
-    systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
-    STK_CVR = 0;
-    systick_set_reload(rcc_ahb_frequency / 8 / 1000);
-    systick_clear();
-    systick_interrupt_enable();
-    systick_counter_enable();
-
-}
-
 static void gpio_setup(void) {
     /* Set pin to 'output push-pull'. */
     /* Using API functions: */
@@ -206,8 +194,8 @@ static void button_setup(void) {
     button[15].type = 3;
     button[16].gpio_num = 201;
     button[16].type = 3;
-    encoder.index_a = 15;
-    encoder.index_b = 16;
+    encoder.clk = 15;
+    encoder.dat = 16;
 
     button[17].gpio_num = 202;
     button[17].type = 2;
@@ -271,9 +259,8 @@ void button_scan(void) {
     uint8_t tca_raw_2[2] = {0};
     i2c_transfer7_bit(I2C1, I2C_TCA9535_ADDR_1, CMD_INPUT_PORT_0, 1, &tca_raw_1[0], 2, 10);
     i2c_transfer7_bit(I2C1, I2C_TCA9535_ADDR_2, CMD_INPUT_PORT_0, 1, &tca_raw_2[0], 2, 10);
-    usart_print_int(USART1, tca_raw_1[1]);
-    usart_print_int(USART1, tca_raw_2[0]);
-    uint8_t encoderTick = 0;
+    //usart_print_int(USART1, tca_raw_1[1]);
+    //usart_print_int(USART1, tca_raw_2[0]);
 
     for (int i = 0; i < BUTTON_MAX; i++) {
         if (button[i].type == 0 || button[i].type == 1) {
@@ -294,32 +281,53 @@ void button_scan(void) {
             }
         } else if (button[i].type == 3) {
             button[i].state_last = button[i].state;
-            button[i].state = (tca_raw_2[(button[i].gpio_num % 200) / 8] >> (button[i].gpio_num % 200 % 8)) & 1;
-            encoderTick ^= 1;
-
-            if(!encoderTick && button[encoder.index_a].state_last != button[encoder.index_a].state) {
-                
-                encoder.dir_last = encoder.dir;
-                encoder.dir = button[encoder.index_b].state && button[encoder.index_a].state;
-
-                if(encoder.dir_last == 0 && encoder.dir == 0) {
-                    encoder.state = 1;
-                    button[encoder.index_a].state = 1;
-                    button[encoder.index_b].state = 0;
-                }else if(encoder.dir_last == 1 && encoder.dir == 1) {
-                    encoder.state = 2;
-                    button[encoder.index_a].state = 0;
-                    button[encoder.index_b].state = 1;
-                }else {
-                    encoder.state = 0;
-                    button[encoder.index_a].state = 0;
-                    button[encoder.index_b].state = 0;
-                }
-
+            if(i == encoder.clk) {
+                encoder.clk_state_last = encoder.clk_state;
+                encoder.clk_state = (tca_raw_2[(button[i].gpio_num % 200) / 8] >> (button[i].gpio_num % 200 % 8)) & 1;
+            } else if (i == encoder.dat) {
+                encoder.dat_state_last = encoder.dat_state;
+                encoder.dat_state = (tca_raw_2[(button[i].gpio_num % 200) / 8] >> (button[i].gpio_num % 200 % 8)) & 1;
             }
-
-            // TODO: put in enc3der code
         }
+    }
+    // TODO change button state logic and port to encoder properties to preserve button function
+
+    
+    if(encoder.clk_state_last != encoder.clk_state) {
+            
+        if(encoder.dat_state != encoder.clk_state) {
+            encoder.dir = 1;
+            button[encoder.clk].state = 1;
+            button[encoder.dat].state = 0;
+        } else {
+            encoder.dir = 2;
+            button[encoder.clk].state = 0;
+            button[encoder.dat].state = 1;
+        }
+        
+        usart_print_int(USART1, encoder.dir);
+
+        /*encoder.dir_last = encoder.dir;
+        encoder.dir = button[encoder.dat].state && button[encoder.clk].state;
+
+        if(encoder.dir_last == 0 && encoder.dir == 0) {
+            encoder.state = 1;
+            button[encoder.clk].state = 1;
+            button[encoder.dat].state = 0;
+        }else if(encoder.dir_last == 1 && encoder.dir == 1) {
+            encoder.state = 2;
+            button[encoder.clk].state = 0;
+            button[encoder.dat].state = 1;
+        }else {
+            encoder.state = 0;
+            button[encoder.clk].state = 0;
+            button[encoder.dat].state = 0;
+        }*/
+
+    } else {
+        encoder.dir = 0;
+        button[encoder.clk].state = 0;
+        button[encoder.dat].state = 0;
     }
 }
 

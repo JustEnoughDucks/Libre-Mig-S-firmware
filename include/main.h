@@ -30,18 +30,19 @@ typedef struct
 {
     //uint32_t time_last;
     //int32_t cnt;
-    uint8_t state :3;
-    uint8_t index_a;
-    uint8_t index_b;
-    uint8_t dir :1;
-    uint8_t dir_last :1;
+    uint8_t clk;
+    uint8_t dat;
+    uint8_t clk_state :1;
+    uint8_t clk_state_last :1;
+    uint8_t dat_state :1;
+    uint8_t dat_state_last :1;
+    uint8_t dir :2;
 
 } encoder_t;
 
 
 // Function Prototypes
 static void clock_setup(void);
-static void systick_setup(void);
 static void gpio_setup(void);
 //static void button_setup(button_t (*b)[35]);
 static void button_setup(void);

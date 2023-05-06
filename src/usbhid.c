@@ -265,7 +265,8 @@ void hid_set_config(usbd_device *dev, uint16_t wValue) {
     usbd_register_control_callback(dev, USB_REQ_TYPE_CLASS | USB_REQ_TYPE_INTERFACE,
                                    USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT, dfu_control_request);
 #endif
-
+    
+    // Systick Setup
     systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
     STK_CVR = 0;
     systick_set_reload(rcc_ahb_frequency / 1000);
